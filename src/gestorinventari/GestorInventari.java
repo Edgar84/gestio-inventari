@@ -60,19 +60,32 @@ public class GestorInventari {
     }
     //Llistar els productes
     static void llistarTotsProductes() throws SQLException{
-        //Preparem la consulta
-        String consulta = "SELECT * FROM productes ORDER BY nom;";
-        PreparedStatement ps = connectionBD.prepareStatement(consulta);
-        //Llencem consulta
-        ResultSet rs=ps.executeQuery();
-        while (rs.next()){
-            System.out.println("--------------");
-            System.out.println("Id: " + rs.getInt("id"));
-            System.out.println("Nom: " + rs.getString("nom"));
-            System.out.println("Any: " + rs.getInt("any"));
-            System.out.println("Tipus: " + rs.getString("tipus"));
-            System.out.println("Preu: " + rs.getDouble("preu"));
-            System.out.println("Descripció: " + rs.getString("desc"));
+        PreparedStatement ps = null;
+        try{
+            //Preparem la consulta
+            String consulta = "SELECT * FROM productes ORDER BY nom;";
+            ps = connectionBD.prepareStatement(consulta);
+            //Llencem consulta
+            ResultSet rs=ps.executeQuery();
+            while (rs.next()){
+                System.out.println("--------------");
+                System.out.println("Id: " + rs.getInt("id"));
+                System.out.println("Nom: " + rs.getString("nom"));
+                System.out.println("Any: " + rs.getInt("any"));
+                System.out.println("Tipus: " + rs.getString("tipus"));
+                System.out.println("Preu: " + rs.getDouble("preu"));
+                System.out.println("Descripció: " + rs.getString("desc"));
+            }
+        } catch (SQLException sqle) {
+            sqle.printStackTrace();
+        } finally {
+            if (ps != null){
+                try {
+                    ps.close();
+                } catch (SQLException sqle) {
+                    sqle.printStackTrace();
+                }
+            }
         }
     }
     //Donar d'alta un producte
@@ -274,18 +287,30 @@ public class GestorInventari {
         }
         
         consulta = "SELECT * FROM productes WHERE id = " + consultarProd + ";";
-        ps = connectionBD.prepareStatement(consulta);
-        rs=ps.executeQuery();
-        while (rs.next()){
-            System.out.println("\n--------------");
-            System.out.println("Id: " + rs.getInt("id"));
-            System.out.println("Nom: " + rs.getString("nom"));
-            System.out.println("Any: " + rs.getInt("any"));
-            System.out.println("Descripció: " + rs.getString("desc"));
-            System.out.println("Tipus: " + rs.getString("tipus"));
-            System.out.println("Preu: " + rs.getDouble("preu"));
-            System.out.println("Stock: " + rs.getString("stock"));
-            System.out.println("--------------");
+        try{
+            ps = connectionBD.prepareStatement(consulta);
+            rs=ps.executeQuery();
+            while (rs.next()){
+                System.out.println("\n--------------");
+                System.out.println("Id: " + rs.getInt("id"));
+                System.out.println("Nom: " + rs.getString("nom"));
+                System.out.println("Any: " + rs.getInt("any"));
+                System.out.println("Descripció: " + rs.getString("desc"));
+                System.out.println("Tipus: " + rs.getString("tipus"));
+                System.out.println("Preu: " + rs.getDouble("preu"));
+                System.out.println("Stock: " + rs.getString("stock"));
+                System.out.println("--------------");
+            }
+        } catch (SQLException sqle) {
+            sqle.printStackTrace();
+        } finally {
+            if (ps != null){
+                try {
+                    ps.close();
+                } catch (SQLException sqle) {
+                    sqle.printStackTrace();
+                }
+            }
         }
     }
     
@@ -505,7 +530,7 @@ public class GestorInventari {
         } catch (SQLException sqle) {
             sqle.printStackTrace();
         } finally {
-            if (ps != null)
+            if (ps != null){
                 System.out.println("\nS´ha modificat correcatment:");
                 System.out.println("ID: " + id);
                 System.out.println("Nom: " + nom);
@@ -516,9 +541,9 @@ public class GestorInventari {
                 System.out.println("Stock: " + stock);
                 try {
                     ps.close();
-            } catch (SQLException sqle) {
-                System.out.println("\nS´ha produït un error");
-                sqle.printStackTrace();
+                } catch (SQLException sqle) {
+                    sqle.printStackTrace();
+                }
             }
         }
     }
