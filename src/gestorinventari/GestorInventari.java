@@ -517,6 +517,7 @@ public class GestorInventari {
                 try {
                     ps.close();
             } catch (SQLException sqle) {
+                System.out.println("\nS´ha produït un error");
                 sqle.printStackTrace();
             }
         }
@@ -537,6 +538,7 @@ public class GestorInventari {
         int count = 0;
         int idProAEliminar = 0;
         String nomProAEliminar = "";
+        
         while (rs.next()){
             count++;
             System.out.println("--------------");
@@ -561,6 +563,7 @@ public class GestorInventari {
         //Confirmació i executar consulta
         System.out.println("Estás segur d'esborrar '" + nomProAEliminar + "' amb ID " + idProAEliminar + "?");
         String confirmEliminar = teclat.next();
+        
         if(!"No".equals(confirmEliminar) && !"no".equals(confirmEliminar) && !"n".equals(confirmEliminar)){
             //Primer borrem la associaciódel producte amb la categoría
             String dependeciaPerEliminar = "DELETE FROM pertany WHERE id_prod = ?;";
@@ -576,16 +579,16 @@ public class GestorInventari {
             }catch(SQLException sqle){
                 sqle.printStackTrace();
             }finally {
-                if (ps != null)
+                if (ps != null){
                     System.out.println("\nProducte eliminat correcatment:");
                     try {
                         ps.close();
-                } catch (SQLException sqle) {
-                    sqle.printStackTrace();
+                    } catch (SQLException sqle) {
+                        sqle.printStackTrace();
+                    }
                 }
             }
         }
-    
     }
     
     
