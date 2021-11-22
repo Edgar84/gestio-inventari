@@ -25,8 +25,7 @@ public class CallMenu {
                     callSubMenu();
                     break;
                 case 2:
-                    //System.out.println("Opció 2");
-                    conectionDB();
+                    System.out.println("Opció 2");
                     break;
                 case 3:
                     System.out.println("Opció 3");
@@ -41,7 +40,7 @@ public class CallMenu {
     }
     // Submenu
     static void callSubMenu() throws SQLException{
-        //do{
+        do{
             System.out.println("");
             System.out.println("1.1- Llistar tots els productes");
             System.out.println("1.2- Alta de producte");
@@ -73,10 +72,6 @@ public class CallMenu {
                 default:
                     System.out.println("--> Opció no válida per tornar enrere premi 5 <-- \n--> Per sortir premi 0 <--");
             }
-        //}while(!sortir);
-    }
-
-    private static void conectionDB() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }while(!sortir);
     }
 }

@@ -34,9 +34,7 @@ public class GestorInventari {
         
         
     }//end main 
-    
-    /*************************************************************/
-    // Menu
+
     
     //DB conection
     static void conectionDB() throws SQLException{
