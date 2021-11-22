@@ -43,10 +43,11 @@ public class CallMenu {
         do{
             System.out.println("");
             System.out.println("1.1- Llistar tots els productes");
-            System.out.println("1.2- Alta de producte");
-            System.out.println("1.3- Modifica el producte");
-            System.out.println("1.4- Esborrar");
-            System.out.println("1.5- Tornar");
+            System.out.println("1.2- Consultar un producte");
+            System.out.println("1.3- Alta de producte");
+            System.out.println("1.4- Modifica el producte");
+            System.out.println("1.5- Esborrar");
+            System.out.println("1.6- Tornar");
             System.out.println("\nTRIA UNA OPCIÓ");
             
             int opcioMenu = GestorInventari.teclat.nextInt();
@@ -58,19 +59,22 @@ public class CallMenu {
                     GestorInventari.llistarTotsProductes();
                     break;
                 case 2:
-                    GestorInventari.altaProducte();
+                    GestorInventari.consultarUnProducte();
                     break;
                 case 3:
-                    GestorInventari.modificarProducte();
+                    GestorInventari.altaProducte();
                     break;
                 case 4:
-                   GestorInventari.borrarProducte();
+                    GestorInventari.modificarProducte();
                     break;
                 case 5:
+                   GestorInventari.borrarProducte();
+                    break;
+                case 6:
                     callMenu();
                     break;
                 default:
-                    System.out.println("--> Opció no válida per tornar enrere premi 5 <-- \n--> Per sortir premi 0 <--");
+                    System.out.println("--> Opció no válida per tornar enrere premi 6 <-- \n--> Per sortir premi 0 <--");
             }
         }while(!sortir);
     }

@@ -45,6 +45,7 @@ public class GestorInventari {
         String pass = "12345";
         connectionBD = DriverManager.getConnection(server + schema, user, pass);
         //Podem comprobar la conexió desde aquí o desde on es crida el mètode
+        //Si ho fem desde on es crida, s'haurà d'afegir "throws SQLException" al nom del mètode
         /*
         try {
             connectionBD = DriverManager.getConnection(server + schema, user, pass);
@@ -182,7 +183,7 @@ public class GestorInventari {
         
         teclat.nextLine();
         
-        /************ STOCK *************/
+            /************ STOCK *************/
         int stock = 1;
         do {  
             try {
@@ -229,6 +230,65 @@ public class GestorInventari {
         }
     }
     
+    static void consultarUnProducte() throws SQLException{
+        System.out.println("Consultar un producte\n");
+        teclat.nextLine();
+        
+        boolean continua = false;
+        String consulta = "";
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int consultarProd = 0;
+        do {  
+            try {
+                System.out.println("Si coneixes l'ID introdueix-la, si no, premeu 0:");
+                consultarProd = teclat.nextInt();
+                continua = true;
+            } catch (InputMismatchException ex) {
+                System.out.println("Només pots insertar números enters");
+                teclat.next();
+                continua = false;
+            }
+            
+        } while (!continua);
+        teclat.nextLine();
+        if(consultarProd == 0){
+            System.out.println("Escriu el nom del producte a consultar:");
+            String consultarNomProd = teclat.nextLine();
+            consulta = "SELECT * FROM productes WHERE nom LIKE '%" + consultarNomProd + "%';";
+            
+            ps = connectionBD.prepareStatement(consulta);
+            rs=ps.executeQuery();
+            int count = 0;
+            while (rs.next()){
+                count++;
+                System.out.println("--------------");
+                System.out.println("Id: " + rs.getInt("id") + " ---> " + rs.getString("nom"));
+            }
+            System.out.println("--------------");
+            System.out.println("\nS'han trobat " + count + " registres.\n");
+            System.out.println("Indica el ID del porducte a consultar");
+            System.out.println("ID:");
+            consultarProd = teclat.nextInt();
+            teclat.nextLine();
+        }
+        
+        consulta = "SELECT * FROM productes WHERE id = " + consultarProd + ";";
+        ps = connectionBD.prepareStatement(consulta);
+        rs=ps.executeQuery();
+        while (rs.next()){
+            System.out.println("\n--------------");
+            System.out.println("Id: " + rs.getInt("id"));
+            System.out.println("Nom: " + rs.getString("nom"));
+            System.out.println("Any: " + rs.getInt("any"));
+            System.out.println("Descripció: " + rs.getString("desc"));
+            System.out.println("Tipus: " + rs.getString("tipus"));
+            System.out.println("Preu: " + rs.getDouble("preu"));
+            System.out.println("Stock: " + rs.getString("stock"));
+            System.out.println("--------------");
+        }
+    }
+    
     static void modificarProducte() throws SQLException{
         
         System.out.println("Modificar un producte\n Quin producte vol editar?");
@@ -256,29 +316,22 @@ public class GestorInventari {
         }
         System.out.println("--------------");
         
+        //Si hi ha més d'un registre preguntem per l'ID a modificar
         if(count > 1){
             System.out.println("S'han trobat " + count + " registres.\n");
-
-            //Preguntem per l'ID a modificar
             System.out.println("Indica el ID del porducte a modificar");
             System.out.println("ID:");
             idProAModificar = teclat.nextInt();
-            teclat.nextLine();
+            
         }
-        /*if (count == 1){
-            if(rs.next()){
-                idProAModificar = rs.getInt("id");
-            }
-            teclat.nextLine();
-        }*/
         
         //Indiquem el producte escollit i el guardem per poder-lo modificar
-        System.out.println("El registre a modificar es " + idProAModificar);
+        //System.out.println("El registre a modificar es " + idProAModificar);
         String productePerModificar = "SELECT * FROM productes WHERE id =" + idProAModificar + ";";
         ps = connectionBD.prepareStatement(productePerModificar);
         rs = ps.executeQuery();
         
-        //Guardem els valos en variables, les inicialitzem i després els hi donem el valor de l'ultim Resultset
+        //Guardem els valos en variables, les inicialitzem i després els hi donem el valor de l'ultim ResultSet
         String nom = ""; 
         String descripcio = ""; 
         String tipus = "";
@@ -296,15 +349,14 @@ public class GestorInventari {
             stock = rs.getInt("stock");
             preu = rs.getDouble("preu");
         }
-        nom =nom;
         
-        boolean continua = false;
+        boolean continua = false; //Boolea per avaluar els Try-Catch
         String modificarCamp = "no";
         
         //Començem a preguntar quins camps vol modificar i quin será el nou valor
         
             /************ NOM *************/
-            
+        System.out.println("El registre a modificar es el " + id + " -> " + nom + " (" + any + ").");    
         teclat.nextLine();
         System.out.println("Modificar NOM? (Si o No)");
         modificarCamp = teclat.next();
@@ -498,21 +550,26 @@ public class GestorInventari {
         }
         System.out.println("--------------");
         
+        //Si hi ha més d'un registre preguntem per l'ID a eliminar
         if(count > 1){
             System.out.println("S'han trobat " + count + " registres.\n");
-
-            //Preguntem per l'ID a modificar
             System.out.println("Indica el ID del porducte que vol eliminar");
             System.out.println("ID:");
             idProAEliminar = teclat.nextInt();
             teclat.nextLine();
         }
-        
+        //Confirmació i executar consulta
         System.out.println("Estás segur d'esborrar '" + nomProAEliminar + "' amb ID " + idProAEliminar + "?");
         String confirmEliminar = teclat.next();
         if(!"No".equals(confirmEliminar) && !"no".equals(confirmEliminar) && !"n".equals(confirmEliminar)){
+            //Primer borrem la associaciódel producte amb la categoría
+            String dependeciaPerEliminar = "DELETE FROM pertany WHERE id_prod = ?;";
+            //Despres borrem el producte
             String productePerEliminar = "DELETE FROM productes WHERE id = ?;";
             try{
+                ps = connectionBD.prepareStatement(dependeciaPerEliminar);
+                ps.setInt(1,idProAEliminar );
+                ps.executeUpdate();
                 ps = connectionBD.prepareStatement(productePerEliminar);
                 ps.setInt(1,idProAEliminar );
                 ps.executeUpdate();
