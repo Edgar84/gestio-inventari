@@ -1,17 +1,21 @@
 
 package gestorinventari;
 
+import com.oracle.webservices.internal.api.databinding.DatabindingModeFeature;
 import static gestorinventari.CallMenu.callMenu;
+import static gestorinventari.provesFitxers.actualitzarFitxerDB;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class GestorInventari {
     
@@ -19,6 +23,7 @@ public class GestorInventari {
     static Scanner teclat = new Scanner(System.in);
     static boolean sortir = false;
     static Connection connectionBD = null;
+    static String pathPendents = ".\\files\\ENTRADES PENDENTS";
     
     public static void main(String[] args) {
         try {
@@ -35,11 +40,12 @@ public class GestorInventari {
         
     }//end main 
 
+    /***** 1- MENU ******/
     
     //DB conection
     static void conectionDB() throws SQLException{
-        //String server = "jdbc:mysql://192.168.18.55:3306/";   //Insti
-        String server = "jdbc:mysql://192.168.1.55:3306/";      //Casa
+        String server = "jdbc:mysql://192.168.18.55:3306/";   //Insti
+        //String server = "jdbc:mysql://192.168.1.55:3306/";      //Casa
         String schema = "db_projecte";
         String user = "proinv";
         String pass = "12345";
@@ -69,13 +75,14 @@ public class GestorInventari {
             ResultSet rs=ps.executeQuery();
             while (rs.next()){
                 System.out.println("--------------");
-                System.out.println("Id: " + rs.getInt("id"));
-                System.out.println("Nom: " + rs.getString("nom"));
-                System.out.println("Any: " + rs.getInt("any"));
-                System.out.println("Tipus: " + rs.getString("tipus"));
-                System.out.println("Preu: " + rs.getDouble("preu"));
-                System.out.println("Descripció: " + rs.getString("desc"));
+                System.out.print("Id: " + rs.getInt("id") + " | ");
+                System.out.print("Nom: " + rs.getString("nom") + " | ");
+                System.out.print("Any: " + rs.getInt("any") + " | ");
+                System.out.print("Tipus: " + rs.getString("tipus") + " | ");
+                System.out.print("Preu: " + rs.getDouble("preu") + " | ");
+                System.out.println("Descripció: " + rs.getString("desc") + " | ");
             }
+            System.out.println("--------------");
         } catch (SQLException sqle) {
             sqle.printStackTrace();
         } finally {
@@ -231,18 +238,18 @@ public class GestorInventari {
         if (insert.executeUpdate() != 0) {
             System.out.println("Nou producte donat d'alta:");
             System.out.println("--------------------------");
-            System.out.println("Nom: " + nom);
-            System.out.println("Any: " + any);
+            System.out.print("Nom: " + nom + " | ");
+            System.out.print("Any: " + any + " | ");
+            System.out.print("Tipus: " + tipus + " | ");
+            System.out.print("Preu: " + preu + " | ");
+            System.out.println("Stock: " + stock + " | ");
             System.out.println("Descripció: " + descripcio);
-            System.out.println("Tipus: " + tipus);
-            System.out.println("Preu: " + preu);
-            System.out.println("Stock: " + stock);
             System.out.println("--------------------------");
         }else {
             System.out.println("Error");
         }
     }
-    
+    //Consultar un producte
     static void consultarUnProducte() throws SQLException{
         System.out.println("Consultar un producte\n");
         teclat.nextLine();
@@ -313,7 +320,7 @@ public class GestorInventari {
             }
         }
     }
-    
+    //Modificar un producte
     static void modificarProducte() throws SQLException{
         
         System.out.println("Modificar un producte\n Quin producte vol editar?");
@@ -547,7 +554,7 @@ public class GestorInventari {
             }
         }
     }
-    
+    //Borrar un producte
     static void borrarProducte() throws SQLException{
         System.out.println("Esborrar un producte\n Quin producte vol eliminar?");
         teclat.nextLine();
@@ -590,14 +597,21 @@ public class GestorInventari {
         String confirmEliminar = teclat.next();
         
         if(!"No".equals(confirmEliminar) && !"no".equals(confirmEliminar) && !"n".equals(confirmEliminar)){
-            //Primer borrem la associaciódel producte amb la categoría
-            String dependeciaPerEliminar = "DELETE FROM pertany WHERE id_prod = ?;";
+            //Primer borrem les associacións del producte
+            String dependeciaCatEliminar = "DELETE FROM pertany WHERE id_prod = ?;";
+            String dependeciaSemEliminar = "DELETE FROM semblaça WHERE id_prod_one = ? OR id_prod_two = ?;";
             //Despres borrem el producte
             String productePerEliminar = "DELETE FROM productes WHERE id = ?;";
             try{
-                ps = connectionBD.prepareStatement(dependeciaPerEliminar);
+                //borrar dependecies
+                ps = connectionBD.prepareStatement(dependeciaCatEliminar);
                 ps.setInt(1,idProAEliminar );
                 ps.executeUpdate();
+                ps = connectionBD.prepareStatement(dependeciaSemEliminar);
+                ps.setInt(1,idProAEliminar );
+                ps.setInt(2,idProAEliminar );
+                ps.executeUpdate();
+                //Borrar productes
                 ps = connectionBD.prepareStatement(productePerEliminar);
                 ps.setInt(1,idProAEliminar );
                 ps.executeUpdate();
@@ -617,4 +631,72 @@ public class GestorInventari {
     }
     
     
+    /***** 2- MENU ******/
+    
+    static void actualitzarStock() throws SQLException, IOException{
+        System.out.println("ACTUALITZAR STOCK");
+        //System.out.println(pathPendents);
+        File fitxer = new File(pathPendents);
+        
+        //System.out.println(fitxer.getAbsolutePath());
+        
+        if(fitxer.isDirectory()){
+            //System.out.println("es un directori");
+            File[] fitxers = fitxer.listFiles();
+            //Recorrem tots els fitxers de la carpeta ENTRADES PENDENTS
+            for(int i = 0; i < fitxers.length; i++){
+                //Llegir linia a liniea i actualitzar fitxer a la Base de dades
+                //System.out.println(fitxers[i].getName());
+                //li passon cada un dels fichers ([i])
+                actualitzarFitxerDB(fitxers[i]);
+                //moureFitxerDB(fitxers[i]);
+            }
+        }
+        
+    }
+    
+    static void actualitzarFitxerDB(File fitxer) throws FileNotFoundException, IOException{
+        FileReader fr = new FileReader(fitxer);
+        BufferedReader buffer = new BufferedReader(fr);
+        
+        String linea;
+        while(( linea = buffer.readLine() ) != null){   //comprobar si la líena es diferent a null (hi ha dades al fitxer)
+            //System.out.println(linea); // retorna el format del document(idproducte:stock)(int:int)
+            int numProducte = Integer.parseInt(linea.substring(0,linea.indexOf(":")));
+            int numUnitats =  Integer.parseInt(linea.substring(linea.indexOf(":") + 1));
+            System.out.println("ID: " + numProducte + " STOCK: " + numUnitats);    
+            actualitzarStockFitxer(numProducte,numUnitats);
+        }
+    }
+    
+    static  void actualitzarStockFitxer(int idProducte,int stock) {
+        
+        //System.out.println("id:" + idProducte + " stock: " + stock);
+        String updateStock = "UPDATE productes SET stock = stock + ? WHERE id = ?";
+        PreparedStatement ps = null;
+        
+        try {
+            System.out.println("entro");
+            ps = connectionBD.prepareStatement(updateStock);
+            ps.setInt(1, stock);  //Stock  
+            ps.setInt(2, idProducte);      //Id producte
+            ps.executeUpdate();
+        } catch (SQLException sqle) {
+            sqle.printStackTrace();
+        } finally {
+            if (ps != null){
+                //System.out.println("\nS´ha actualitzat correcatment:");
+                //System.out.println("ID: " + idProducte);
+                //System.out.println("Stock: " + stock);
+                try {
+                    ps.close();
+                } catch (SQLException sqle) {
+                    sqle.printStackTrace();
+                }
+            }
+        }
+        
+        
+    }
+   
 }//end class

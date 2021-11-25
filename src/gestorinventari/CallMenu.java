@@ -1,18 +1,21 @@
 
 package gestorinventari;
 
+
+import static gestorinventari.GestorInventari.actualitzarStock;
+import java.io.IOException;
 import java.sql.SQLException;
 
 public class CallMenu {
     static boolean sortir = false;
-    static void callMenu() throws SQLException{
+    static void callMenu() throws SQLException, IOException{
         do {
             System.out.println("");
             System.out.println("******MENU GESTOR INVENTARI******");
-            System.out.println("1. Gestionar productes");
-            System.out.println("2. Actualitzar stock");
-            System.out.println("3. Preparar comandes");
-            System.out.println("4. analitzar les comandes");
+            System.out.println("1. Gestionar productes"); //Accés a DDBB Scanner
+            System.out.println("2. Actualitzar stock"); //Lectura de fitxers
+            System.out.println("3. Generació de comandes"); //Escritura de firxers
+            System.out.println("4. Analitzar comandes proveidors"); //arrays
             System.out.println("\nTRIA UNA OPCIÓ");
 
             int opcioMenu = GestorInventari.teclat.nextInt();
@@ -25,7 +28,7 @@ public class CallMenu {
                     callSubMenu();
                     break;
                 case 2:
-                    System.out.println("Opció 2");
+                    actualitzarStock();
                     break;
                 case 3:
                     System.out.println("Opció 3");
@@ -39,7 +42,7 @@ public class CallMenu {
         }while(!sortir);
     }
     // Submenu
-    static void callSubMenu() throws SQLException{
+    static void callSubMenu() throws SQLException, IOException{
         do{
             System.out.println("");
             System.out.println("1.1- Llistar tots els productes");
