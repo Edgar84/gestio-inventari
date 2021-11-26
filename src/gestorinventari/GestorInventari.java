@@ -1,14 +1,17 @@
 
 package gestorinventari;
 
-import com.oracle.webservices.internal.api.databinding.DatabindingModeFeature;
 import static gestorinventari.CallMenu.callMenu;
-import static gestorinventari.provesFitxers.actualitzarFitxerDB;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -23,7 +26,9 @@ public class GestorInventari {
     static Scanner teclat = new Scanner(System.in);
     static boolean sortir = false;
     static Connection connectionBD = null;
-    static String pathPendents = ".\\files\\ENTRADES PENDENTS";
+    static String pathPendents = "files/ENTRADES PENDENTS/";
+    static String pathProcesades = "files/ENTRADES PROCESSADES/";
+    static String pathComandes = "files/COMANDES/";
     
     public static void main(String[] args) {
         try {
@@ -443,7 +448,7 @@ public class GestorInventari {
             int opcioMenu;
             do {
                 try {
-                    while ("".equals(tipus) ) {   
+                    while (tipus.equals("") ) {   
                         System.out.println("Nou camp TIPUS (Escull una opció)");
                         System.out.println("1- DVD doble capa");
                         System.out.println("2- Caixa slim");
@@ -556,6 +561,7 @@ public class GestorInventari {
     }
     //Borrar un producte
     static void borrarProducte() throws SQLException{
+        
         System.out.println("Esborrar un producte\n Quin producte vol eliminar?");
         teclat.nextLine();
             
@@ -634,60 +640,104 @@ public class GestorInventari {
     /***** 2- MENU ******/
     
     static void actualitzarStock() throws SQLException, IOException{
-        System.out.println("ACTUALITZAR STOCK");
-        //System.out.println(pathPendents);
-        File fitxer = new File(pathPendents);
         
-        //System.out.println(fitxer.getAbsolutePath());
+        System.out.println("ACTUALITZAR STOCK");
+        File fitxer = new File(pathPendents); //pathPendents en global
         
         if(fitxer.isDirectory()){
-            //System.out.println("es un directori");
             File[] fitxers = fitxer.listFiles();
-            //Recorrem tots els fitxers de la carpeta ENTRADES PENDENTS
-            for(int i = 0; i < fitxers.length; i++){
-                //Llegir linia a liniea i actualitzar fitxer a la Base de dades
-                //System.out.println(fitxers[i].getName());
-                //li passon cada un dels fichers ([i])
-                actualitzarFitxerDB(fitxers[i]);
-                //moureFitxerDB(fitxers[i]);
+            if(fitxers.length == 0) {
+                System.out.println("\nNo hi ha arxius per actualitzar");
+            }else{
+                //Recorrem tots els fitxers de la carpeta ENTRADES PENDENTS
+                for(int i = 0; i < fitxers.length; i++){
+                    //Llegir linia a liniea i actualitzar fitxer a la Base de dades
+                    //System.out.println(fitxers[i].getName());
+                    //li passo cada un dels fichers a actualitzar([i]) i a moure([i])
+                    actualitzarFitxerDB(fitxers[i]);
+                    moureFitxerDB(fitxers[i]);
+                }
             }
         }
         
     }
     
     static void actualitzarFitxerDB(File fitxer) throws FileNotFoundException, IOException{
-        FileReader fr = new FileReader(fitxer);
-        BufferedReader buffer = new BufferedReader(fr);
+        
+        FileReader fr = new FileReader(fitxer);             //Llegeix caracter a caracter cada línea del fitxer
+        BufferedReader buffer = new BufferedReader(fr);     //Junta els caracters del FileReader per crear una cadena de caracters
         
         String linea;
-        while(( linea = buffer.readLine() ) != null){   //comprobar si la líena es diferent a null (hi ha dades al fitxer)
-            //System.out.println(linea); // retorna el format del document(idproducte:stock)(int:int)
+        while(( linea = buffer.readLine() ) != null){       //comprobar si la líena es diferent a null (hi ha dades al fitxer)
+            //System.out.println(linea);                    // retorna el format del document(idproducte:stock)(int:int)
             int numProducte = Integer.parseInt(linea.substring(0,linea.indexOf(":")));
             int numUnitats =  Integer.parseInt(linea.substring(linea.indexOf(":") + 1));
             System.out.println("ID: " + numProducte + " STOCK: " + numUnitats);    
             actualitzarStockFitxer(numProducte,numUnitats);
         }
+        //Tamquem el FileReader i el BufferReader per poder seguir utilitzant el fitxer (moure'l a un altre carpeta)
+        buffer.close();
+        fr.close();
     }
     
     static  void actualitzarStockFitxer(int idProducte,int stock) {
         
-        //System.out.println("id:" + idProducte + " stock: " + stock);
         String updateStock = "UPDATE productes SET stock = stock + ? WHERE id = ?";
         PreparedStatement ps = null;
         
         try {
             System.out.println("entro");
             ps = connectionBD.prepareStatement(updateStock);
-            ps.setInt(1, stock);  //Stock  
-            ps.setInt(2, idProducte);      //Id producte
+            ps.setInt(1, stock);        //Stock  
+            ps.setInt(2, idProducte);   //Id producte
             ps.executeUpdate();
         } catch (SQLException sqle) {
             sqle.printStackTrace();
         } finally {
             if (ps != null){
-                //System.out.println("\nS´ha actualitzat correcatment:");
-                //System.out.println("ID: " + idProducte);
-                //System.out.println("Stock: " + stock);
+                System.out.println("\nL'estock s´ha actualitzat correcatment:");
+                try {
+                    ps.close();
+                } catch (SQLException sqle) {
+                    sqle.printStackTrace();
+                }
+            }
+        }
+    }
+    
+    static void moureFitxerDB(File fitxer) throws IOException{
+        
+        FileSystem sistemaDeFitxers = FileSystems.getDefault();
+        Path origen = sistemaDeFitxers.getPath(pathPendents + fitxer.getName());    //pathPendents en global
+        Path desti = sistemaDeFitxers.getPath(pathProcesades + fitxer.getName());   //pathProcesades en global
+        
+        Files.move(origen,desti,StandardCopyOption.REPLACE_EXISTING);   //Carpeta d'origen, capeta de destí, remplaçar si existeix
+        System.out.println("El fitxer " + fitxer.getName() + " s'ha mogut a ENTRADES PROCESSADES");
+    }
+   
+    /***** 3- MENU ******/
+    
+    static void generarComandes(){
+        
+        String dadesEmpresa = "";
+        
+        PreparedStatement ps = null;
+        
+        try{
+            String prodMenys20 = "SELECT id, nom, stock FROM productes WHERE stock < 20;";
+            ps = connectionBD.prepareStatement(prodMenys20);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()){
+                System.out.println("--------------");
+                System.out.print("Id: " + rs.getInt("id") + " | ");
+                System.out.print("Nom: " + rs.getString("nom") + " | ");
+                System.out.println("Stock: " + rs.getInt("stock"));
+            }
+            System.out.println("--------------");
+        } catch (SQLException sqle) {
+            sqle.printStackTrace();
+        } finally {
+            if (ps != null){
                 try {
                     ps.close();
                 } catch (SQLException sqle) {
@@ -697,6 +747,8 @@ public class GestorInventari {
         }
         
         
+        
+        
     }
-   
+    
 }//end class

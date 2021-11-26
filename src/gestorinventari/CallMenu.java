@@ -3,12 +3,16 @@ package gestorinventari;
 
 
 import static gestorinventari.GestorInventari.actualitzarStock;
+import static gestorinventari.GestorInventari.generarComandes;
 import java.io.IOException;
 import java.sql.SQLException;
 
 public class CallMenu {
+    
     static boolean sortir = false;
+    
     static void callMenu() throws SQLException, IOException{
+        
         do {
             System.out.println("");
             System.out.println("******MENU GESTOR INVENTARI******");
@@ -31,7 +35,7 @@ public class CallMenu {
                     actualitzarStock();
                     break;
                 case 3:
-                    System.out.println("Opció 3");
+                    generarComandes();
                     break;
                 case 4:
                     System.out.println("Opció 4");
@@ -41,8 +45,10 @@ public class CallMenu {
             }
         }while(!sortir);
     }
+    
     // Submenu
     static void callSubMenu() throws SQLException, IOException{
+        
         do{
             System.out.println("");
             System.out.println("1.1- Llistar tots els productes");
