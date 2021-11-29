@@ -3,9 +3,11 @@ package gestorinventari;
 
 import static gestorinventari.CallMenu.callMenu;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -17,6 +19,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -717,38 +720,84 @@ public class GestorInventari {
    
     /***** 3- MENU ******/
     
-    static void generarComandes(){
+    static void generarComandes() throws SQLException, IOException{
         
         String dadesEmpresa = "";
         
         PreparedStatement ps = null;
+        ResultSet rs = null;
         
         try{
-            String prodMenys20 = "SELECT id, nom, stock FROM productes WHERE stock < 20;";
+            String prodMenys20 = "select pro.id, pro.nom, pro.stock, prov.id, prov.nom \n" +
+                                "from productes as pro \n" +
+                                "inner join porta as por on pro.id = por.id_prod\n" +
+                                "inner join proveidor as prov on prov.id = por.id_prov \n" +
+                                "where pro.stock < 20 order by prov.nom;";
             ps = connectionBD.prepareStatement(prodMenys20);
-            ResultSet rs = ps.executeQuery();
+            rs = ps.executeQuery();
+            
+            String proveidor = "";
+            if(rs.next()){
+                proveidor = rs.getString("prov.nom");
+            }
+            
             while (rs.next()){
+                if(!proveidor.equals(rs.getString("prov.nom"))){
+                    proveidor = rs.getString("prov.nom");
+                    System.out.println("------------");
+                    System.out.println("Canviat de proveidor a: " + proveidor); 
+                }
                 System.out.println("--------------");
-                System.out.print("Id: " + rs.getInt("id") + " | ");
-                System.out.print("Nom: " + rs.getString("nom") + " | ");
-                System.out.println("Stock: " + rs.getInt("stock"));
+                System.out.print("Id: " + rs.getInt("pro.id") + " | ");
+                System.out.print("Nom: " + rs.getString("pro.nom") + " | ");
+                System.out.print("Nom proveidor: " + rs.getString("prov.nom") + " | ");
+                System.out.println("Stock: " + rs.getInt("pro.stock"));
             }
             System.out.println("--------------");
         } catch (SQLException sqle) {
             sqle.printStackTrace();
         } finally {
-            if (ps != null){
+           /* if (ps != null){
                 try {
                     ps.close();
                 } catch (SQLException sqle) {
                     sqle.printStackTrace();
                 }
-            }
+            }*/
         }
         
-        
-        
-        
+        //crearComandes(rs);
     }
+    
+    static void crearComandes(ResultSet rs) throws SQLException, IOException{
+        
+        //File fitxer = new File(pathComandes);
+        
+        while (rs.next()) {
+            System.out.println("AAAAAAAAA");
+            System.out.println(rs.getInt("pro.id"));
+            System.out.println(rs.getString("pro.nom"));
+            //FileWriter fr = new FileWriter(fitxer);
+            //BufferedWriter comanda = new BufferedWriter(fr); 
+            //String nomProveidor = rs.getString("prov.nom");
+            
+            //if(nomProveidor == null ? nomProveidor != null : !nomProveidor.equals(nomProveidor)){
+            //    System.out.println(nomProveidor);
+            //}
+            
+            //comanda.write(Integer.toString(rs.getInt("pro.id")) + ", ");
+            //comanda.write(rs.getString("pro.nom") + ", ");
+            //comanda.write(rs.getString("prov.nom") + ", ");
+            //comanda.write(rs.getInt("pro.stock") + 82 );
+        }
+    
+    }
+        
+        
+    
+    static void analitzarComandes(){
+        System.out.println("Per fer encara");
+    }
+    
     
 }//end class

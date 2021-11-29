@@ -3,6 +3,7 @@ package gestorinventari;
 
 
 import static gestorinventari.GestorInventari.actualitzarStock;
+import static gestorinventari.GestorInventari.analitzarComandes;
 import static gestorinventari.GestorInventari.generarComandes;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -38,7 +39,7 @@ public class CallMenu {
                     generarComandes();
                     break;
                 case 4:
-                    System.out.println("Opció 4");
+                    analitzarComandes();
                     break;
                 default:
                     System.out.println("--> Opció no válida, per sortir premi 0 <--");
