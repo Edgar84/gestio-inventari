@@ -52,8 +52,8 @@ public class GestorInventari {
     
     //DB conection
     static void conectionDB() throws SQLException{
-        String server = "jdbc:mysql://192.168.18.55:3306/";   //Insti
-        //String server = "jdbc:mysql://192.168.1.55:3306/";      //Casa
+        //String server = "jdbc:mysql://192.168.18.55:3306/";   //Insti
+        String server = "jdbc:mysql://192.168.1.55:3306/";      //Casa
         String schema = "db_projecte";
         String user = "proinv";
         String pass = "12345";
@@ -689,7 +689,6 @@ public class GestorInventari {
         PreparedStatement ps = null;
         
         try {
-            System.out.println("entro");
             ps = connectionBD.prepareStatement(updateStock);
             ps.setInt(1, stock);        //Stock  
             ps.setInt(2, idProducte);   //Id producte
