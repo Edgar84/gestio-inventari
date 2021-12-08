@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -19,7 +20,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -32,6 +32,7 @@ public class GestorInventari {
     static String pathPendents = "files/ENTRADES PENDENTS/";
     static String pathProcesades = "files/ENTRADES PROCESSADES/";
     static String pathComandes = "files/COMANDES/";
+    static final String dadesEmpresa = "Top DVD\nPol. Industrial Casa Pepe, nave 24\n25300, Tàrrega (Lleida)\ninfo@topdvd.com\n93 555 25 36";
     
     public static void main(String[] args) {
         try {
@@ -727,75 +728,115 @@ public class GestorInventari {
         ResultSet rs = null;
         
         try{
-            String prodMenys20 = "select pro.id, pro.nom, pro.stock, prov.id, prov.nom \n" +
-                                "from productes as pro \n" +
-                                "inner join porta as por on pro.id = por.id_prod\n" +
-                                "inner join proveidor as prov on prov.id = por.id_prov \n" +
-                                "where pro.stock < 20 order by prov.nom;";
+            String prodMenys20 = "select pro.id, pro.nom, pro.stock, pro.tipus, prov.id, prov.nom \n" +
+                                 "from productes as pro \n" +
+                                 "inner join porta as por on pro.id = por.id_prod\n" +
+                                 "inner join proveidor as prov on prov.id = por.id_prov \n" +
+                                 "where pro.stock < 20 order by prov.nom;";
             ps = connectionBD.prepareStatement(prodMenys20);
             rs = ps.executeQuery();
             
-            String proveidor = "";
-            if(rs.next()){
-                proveidor = rs.getString("prov.nom");
-            }
+            //FileWriter fw = null;
+            //BufferedWriter bf = null;
+            PrintWriter escritor = null;
             
-            while (rs.next()){
-                if(!proveidor.equals(rs.getString("prov.nom"))){
-                    proveidor = rs.getString("prov.nom");
-                    System.out.println("------------");
-                    System.out.println("Canviat de proveidor a: " + proveidor); 
-                }
-                System.out.println("--------------");
-                System.out.print("Id: " + rs.getInt("pro.id") + " | ");
-                System.out.print("Nom: " + rs.getString("pro.nom") + " | ");
-                System.out.print("Nom proveidor: " + rs.getString("prov.nom") + " | ");
-                System.out.println("Stock: " + rs.getInt("pro.stock"));
+            if(rs.next()){
+                String actProveidor = rs.getString("prov.nom");
+                ////crear capçalera
+                escritor = crearCapçalera(actProveidor);
+                
+                do{
+                    if(!actProveidor.equals(rs.getString("prov.nom"))){
+                        actProveidor = rs.getString("prov.nom");
+                        //escritor.println(rs.getString("pro.nom") + " --> " + rs.getString("pro.tipus") + " --> " + (rs.getInt("pro.stock") + 73) + "        ");
+
+                        escritor.close();//primer tanco fitxer
+                        //creo capçalera
+                        escritor = crearCapçalera(actProveidor);
+                    }
+                    
+                    //escritor.println(rs.getString("pro.nom") + " --> " + rs.getString("pro.tipus") + " --> " + rs.getInt("pro.stock") + 73 + "");
+                    escritor.println(" + Article:       " + rs.getString("pro.nom"));
+                    escritor.println(" + Tipus:         " + rs.getString("pro.tipus"));
+                    escritor.println(" + Quantitat:  " + (150 - rs.getInt("pro.stock")));
+                    escritor.println("------------------------------");
+                    
+                }while(rs.next());
+                
+                //tancar fitxer close()
+                escritor.close();
             }
-            System.out.println("--------------");
+           
+            
         } catch (SQLException sqle) {
             sqle.printStackTrace();
         } finally {
-           /* if (ps != null){
+            if (ps != null){
+                System.out.println("Comanda generada correctament");
                 try {
                     ps.close();
                 } catch (SQLException sqle) {
                     sqle.printStackTrace();
                 }
-            }*/
+            }
         }
         
         //crearComandes(rs);
     }
     
-    static void crearComandes(ResultSet rs) throws SQLException, IOException{
+    static PrintWriter crearCapçalera(String proveidor) throws IOException{
         
-        //File fitxer = new File(pathComandes);
+        FileWriter fw = new FileWriter(pathComandes + proveidor + "-" + java.time.LocalDate.now() + ".txt");
+        BufferedWriter bf = new BufferedWriter(fw);
+        PrintWriter escritor = new PrintWriter(bf);
         
-        while (rs.next()) {
-            System.out.println("AAAAAAAAA");
-            System.out.println(rs.getInt("pro.id"));
-            System.out.println(rs.getString("pro.nom"));
-            //FileWriter fr = new FileWriter(fitxer);
-            //BufferedWriter comanda = new BufferedWriter(fr); 
-            //String nomProveidor = rs.getString("prov.nom");
-            
-            //if(nomProveidor == null ? nomProveidor != null : !nomProveidor.equals(nomProveidor)){
-            //    System.out.println(nomProveidor);
-            //}
-            
-            //comanda.write(Integer.toString(rs.getInt("pro.id")) + ", ");
-            //comanda.write(rs.getString("pro.nom") + ", ");
-            //comanda.write(rs.getString("prov.nom") + ", ");
-            //comanda.write(rs.getInt("pro.stock") + 82 );
+        PreparedStatement ps = null;
+        String nomProv = null;
+        String adresProv = null;
+        int telProv = 0;
+        try{
+            String consulta = "select * from proveidor where nom = '" + proveidor + "';";
+            ps = connectionBD.prepareStatement(consulta);
+            ResultSet rs=ps.executeQuery();
+            while (rs.next()){
+                nomProv = rs.getString("nom");
+                adresProv =  rs.getString("adreça");
+                telProv =  rs.getInt("telèfon");
+            }
+        } catch (SQLException sqle) {
+            sqle.printStackTrace();
         }
-    
+
+        escritor.println(GestorInventari.dadesEmpresa);
+        escritor.println("_______________________\n");
+        escritor.println("Dades proveidor:\n");
+        escritor.println(nomProv);
+        escritor.println(adresProv);
+        escritor.println(telProv + "\n");
+        escritor.println("COMANDA - " + java.time.LocalDate.now() + "\n");
+        escritor.println("------------------------------");
+        //escritor.printf("|%-50s|%-25s|%-4s"," Nom Pel·licula"," Tipus"," Quantitat"); //d=decimal s=enter
+        return escritor;
     }
         
         
     
     static void analitzarComandes(){
         System.out.println("Per fer encara");
+        
+        //Número de productes que s'ha demanat a cada proveidor
+        
+        //el proveidor amb menys productes es *** amb X productes
+        //el que te més produtes es **** amb X productes
+        //la mitjana de productes per comanda es X
+        
+        // es fan 2 arrays:
+        // un array amb el núemro de productes
+        // un array amb el nom del proveidor
+        // els dos amb un index igual
+        
+        //A generació de comandes -> emplenem els arrays !!!
+        
     }
     
     
