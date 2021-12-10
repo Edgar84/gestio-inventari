@@ -11,10 +11,14 @@ DVDWorld
 C/falsa 23
 555456523
 
-COMANDA - 2021-12-08
+COMANDA - 2021-12-10
 
 ------------------------------
  + Article:       Rambo: Last Blood
  + Tipus:         DVD doble capa
  + Quantitat:  132
+------------------------------
+ + Article:       La momia
+ + Tipus:         DVD Amb llibret
+ + Quantitat:  147
 ------------------------------

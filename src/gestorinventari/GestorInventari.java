@@ -20,6 +20,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -33,6 +35,10 @@ public class GestorInventari {
     static String pathProcesades = "files/ENTRADES PROCESSADES/";
     static String pathComandes = "files/COMANDES/";
     static final String dadesEmpresa = "Top DVD\nPol. Industrial Casa Pepe, nave 24\n25300, Tàrrega (Lleida)\ninfo@topdvd.com\n93 555 25 36";
+    static String[] arrProveidors = new String[50];
+    static int contProveidor = 0;
+    //static ArrayList<String> arrProveidors = new ArrayList<String>();
+    static int [] arrQuantitat = new int[50];
     
     public static void main(String[] args) {
         try {
@@ -53,8 +59,8 @@ public class GestorInventari {
     
     //DB conection
     static void conectionDB() throws SQLException{
-        //String server = "jdbc:mysql://192.168.18.55:3306/";   //Insti
-        String server = "jdbc:mysql://192.168.1.55:3306/";      //Casa
+        String server = "jdbc:mysql://192.168.18.55:3306/";   //Insti
+        //String server = "jdbc:mysql://192.168.1.55:3306/";      //Casa
         String schema = "db_projecte";
         String user = "proinv";
         String pass = "12345";
@@ -193,6 +199,88 @@ public class GestorInventari {
         }while (!continua);
         
         teclat.nextLine();
+            
+            /********** CATEGORIA **********/
+            
+        int categoria = 0;
+        int opcioMenuCat;
+        do {
+            try {
+                while (categoria == 0) {   
+                    System.out.println("CATEGORIA (Escull una opció)");
+                    System.out.println("1- Acción");
+                    System.out.println("2- Aventuras");
+                    System.out.println("3- Ciencia Ficción");
+                    System.out.println("4- Comedia");
+                    System.out.println("5- Drama");
+                    System.out.println("6- Terror");
+                    System.out.println("7- Bélica");
+                    System.out.println("8- Western");
+                    System.out.println("9- Animación");
+                    System.out.println("10- Thriller");
+                    System.out.println("11- Erótica");
+                    opcioMenuCat = teclat.nextInt();
+                    continua = true;
+
+                    switch(opcioMenuCat){
+                        case 1:
+                            categoria = 1;
+                            System.out.println("Categoria: Acción");
+                            break;
+                        case 2:
+                            categoria = 2;
+                            System.out.println("Categoria: Aventuras");
+                            break;
+                        case 3:
+                            categoria = 3;
+                            System.out.println("Categoria: Ciencia Ficción");
+                            break;
+                        case 4:
+                            categoria = 4;
+                            System.out.println("Categoria: Comedia");
+                            break;
+                        case 5:
+                            categoria = 5;
+                            System.out.println("Categoria: Drama");
+                            break;
+                        case 6:
+                            categoria = 8;
+                            System.out.println("Categoria: Terror");
+                            break;
+                        case 7:
+                            categoria = 9;
+                            System.out.println("Categoria: Bélica");
+                            break;
+                        case 8:
+                            categoria = 10;
+                            System.out.println("Categoria: Western");
+                            break;
+                        case 9:
+                            categoria = 11;
+                            System.out.println("Categoria: Animación");
+                            break;
+                        case 10:
+                            categoria = 14;
+                            System.out.println("Categoria: Thriller");
+                            break;
+                        case 11:
+                            categoria = 15;
+                            System.out.println("Categoria: Erótica");
+                            break;    
+                        default:
+                            System.out.println("Opció incorrecta");
+                            categoria = 0;
+                            break;
+                    }
+                }
+            } catch(InputMismatchException ex){
+                System.out.println("Només pots escollir entre els valors mostrats");
+                teclat.next();
+                continua = false;
+            }
+        }while (!continua);
+        
+        teclat.nextLine();
         
             /************ PREU *************/
             
@@ -228,36 +316,68 @@ public class GestorInventari {
         } while (!continua);
         
         teclat.nextLine();
-        
         String newProduct = "INSERT INTO productes(`nom`,`any`,`desc`,`preu`,`tipus`,`stock`) VALUES (?,?,?,?,?,?);";
-        PreparedStatement insert = null;
+        PreparedStatement ps = null;
+        int idNewProduct = 0;
         
         try {
-            insert = connectionBD.prepareStatement(newProduct);
-            insert.setString(1, nom);    //Nom
-            insert.setInt(2, any);           //Any
-            insert.setString(3, descripcio);      //Descripció
-            insert.setDouble(4, preu);      //Preu
-            insert.setString(5, tipus);      //Tipus
-            insert.setInt(6, stock);      //Stock
+            //Insertar producte
+            ps = connectionBD.prepareStatement(newProduct);
+            ps.setString(1, nom);    //Nom
+            ps.setInt(2, any);           //Any
+            ps.setString(3, descripcio);      //Descripció
+            ps.setDouble(4, preu);      //Preu
+            ps.setString(5, tipus);      //Tipus
+            ps.setInt(6, stock);      //Stock
+            
         } catch (SQLException sqle) {
             sqle.printStackTrace();
         }
         
-        if (insert.executeUpdate() != 0) {
+        if (ps.executeUpdate() != 0) {
             System.out.println("Nou producte donat d'alta:");
             System.out.println("--------------------------");
             System.out.print("Nom: " + nom + " | ");
             System.out.print("Any: " + any + " | ");
             System.out.print("Tipus: " + tipus + " | ");
+            System.out.print("Categoria: " + categoria + " | ");
             System.out.print("Preu: " + preu + " | ");
             System.out.println("Stock: " + stock + " | ");
             System.out.println("Descripció: " + descripcio);
             System.out.println("--------------------------");
+            
+            //Agafo la ID
+            newProduct = "SELECT id FROM productes WHERE nom = '" + nom + "';";
+            ps = connectionBD.prepareStatement(newProduct);  
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()){
+                idNewProduct = rs.getInt("id");
+            }
         }else {
             System.out.println("Error");
         }
+        
+        emplenarCategoria(idNewProduct,categoria);
     }
+    
+    static void emplenarCategoria(int idprod,int idCat) throws SQLException{
+        
+        String consulta = "";
+        PreparedStatement ps = null;
+        ResultSet  rs = null;
+        
+        try {
+            //Empleno la taula Pertany
+            consulta = "INSERT INTO pertany(`id_prod`,`id_cat`) VALUES (?,?);";
+            ps = connectionBD.prepareStatement(consulta);
+            ps.setInt(1, idprod);
+            ps.setInt(2, idCat);
+            
+        }catch(SQLException sqle){
+            sqle.printStackTrace();
+        }
+    }
+    
     //Consultar un producte
     static void consultarUnProducte() throws SQLException{
         System.out.println("Consultar un producte\n");
@@ -280,7 +400,9 @@ public class GestorInventari {
             }
             
         } while (!continua);
+        
         teclat.nextLine();
+        
         if(consultarProd == 0){
             System.out.println("Escriu el nom del producte a consultar:");
             String consultarNomProd = teclat.nextLine();
@@ -367,7 +489,6 @@ public class GestorInventari {
         }
         
         //Indiquem el producte escollit i el guardem per poder-lo modificar
-        //System.out.println("El registre a modificar es " + idProAModificar);
         String productePerModificar = "SELECT * FROM productes WHERE id =" + idProAModificar + ";";
         ps = connectionBD.prepareStatement(productePerModificar);
         rs = ps.executeQuery();
@@ -610,6 +731,7 @@ public class GestorInventari {
             //Primer borrem les associacións del producte
             String dependeciaCatEliminar = "DELETE FROM pertany WHERE id_prod = ?;";
             String dependeciaSemEliminar = "DELETE FROM semblaça WHERE id_prod_one = ? OR id_prod_two = ?;";
+            String dependeciaPortaEliminar = "DELETE FROM porta WHERE id_prod = ? ;";
             //Despres borrem el producte
             String productePerEliminar = "DELETE FROM productes WHERE id = ?;";
             try{
@@ -620,6 +742,9 @@ public class GestorInventari {
                 ps = connectionBD.prepareStatement(dependeciaSemEliminar);
                 ps.setInt(1,idProAEliminar );
                 ps.setInt(2,idProAEliminar );
+                ps.executeUpdate();
+                ps = connectionBD.prepareStatement(dependeciaPortaEliminar);
+                ps.setInt(1,idProAEliminar );
                 ps.executeUpdate();
                 //Borrar productes
                 ps = connectionBD.prepareStatement(productePerEliminar);
@@ -739,30 +864,43 @@ public class GestorInventari {
             //FileWriter fw = null;
             //BufferedWriter bf = null;
             PrintWriter escritor = null;
-            
+            int articles = 0;
             if(rs.next()){
                 String actProveidor = rs.getString("prov.nom");
                 ////crear capçalera
                 escritor = crearCapçalera(actProveidor);
+                //arrProveidors.add(actProveidor);
+                arrProveidors[contProveidor] = actProveidor;
+                contProveidor++;
                 
                 do{
                     if(!actProveidor.equals(rs.getString("prov.nom"))){
                         actProveidor = rs.getString("prov.nom");
                         //escritor.println(rs.getString("pro.nom") + " --> " + rs.getString("pro.tipus") + " --> " + (rs.getInt("pro.stock") + 73) + "        ");
-
+                        arrQuantitat[contProveidor - 1 ] = articles;
+                        arrProveidors[contProveidor] = actProveidor;
+                        contProveidor++;
+                        articles = 0;
                         escritor.close();//primer tanco fitxer
+                        
+                        
                         //creo capçalera
                         escritor = crearCapçalera(actProveidor);
                     }
                     
-                    //escritor.println(rs.getString("pro.nom") + " --> " + rs.getString("pro.tipus") + " --> " + rs.getInt("pro.stock") + 73 + "");
+                    articles++;
                     escritor.println(" + Article:       " + rs.getString("pro.nom"));
                     escritor.println(" + Tipus:         " + rs.getString("pro.tipus"));
                     escritor.println(" + Quantitat:  " + (150 - rs.getInt("pro.stock")));
                     escritor.println("------------------------------");
                     
+                    
+                    //contQuantitat++;
+                    
+                    
                 }while(rs.next());
                 
+                arrQuantitat[contProveidor - 1] = articles;
                 //tancar fitxer close()
                 escritor.close();
             }
@@ -822,22 +960,62 @@ public class GestorInventari {
         
     
     static void analitzarComandes(){
-        System.out.println("Per fer encara");
         
-        //Número de productes que s'ha demanat a cada proveidor
-        
-        //el proveidor amb menys productes es *** amb X productes
-        //el que te més produtes es **** amb X productes
-        //la mitjana de productes per comanda es X
-        
-        // es fan 2 arrays:
-        // un array amb el núemro de productes
-        // un array amb el nom del proveidor
-        // els dos amb un index igual
-        
-        //A generació de comandes -> emplenem els arrays !!!
-        
+        productesCadaProveidor(arrProveidors, arrQuantitat);
+        proveidorMenysProductes(arrProveidors, arrQuantitat);
+        proveidorMesProductes(arrProveidors, arrQuantitat);
+        proveidorMitjanaProductes(arrProveidors, arrQuantitat);
     }
     
+    //Número de productes que s'ha demanat a cada proveidor
+    static void productesCadaProveidor(String[] proveidor, int []quantitat){
+        System.out.println("Cada proveidor ha demanat:");
+        for(int i = 0; i <= contProveidor -1; i++){
+            System.out.print(" - " + arrProveidors[i] + ": ");
+            System.out.println(arrQuantitat[i] + " productes");
+        }
+        System.out.println("");
+    }
+    
+    //El proveidor amb menys productes demanats
+    static void proveidorMenysProductes(String[] proveidor, int []quantitat){
+        
+        int min = arrQuantitat[0];
+        String prov = arrProveidors[0];
+        for (int i=0;i<contProveidor -1;i++){
+            if(arrQuantitat[i] < min){
+                min = arrQuantitat[i];
+                prov = arrProveidors[i];
+            }
+        }
+        System.out.println("El proveidor amb menys productes es " + prov + " amb " + min + " productes.");
+           
+    }
+    
+    //El que te més produtes demanats
+    static void proveidorMesProductes(String[] proveidor, int []quantitat){
+        
+        int max = arrQuantitat[0];
+        String prov = arrProveidors[0];
+        for (int i=0;i<contProveidor -1;i++){
+            if(arrQuantitat[i] > max){
+                max = arrQuantitat[i];
+                prov = arrProveidors[i];
+            }
+        }
+        System.out.println("El proveidor amb més productes es " + prov + " amb " + max + " productes.");
+    }
+    
+    //la mitjana de productes per comanda
+    static void proveidorMitjanaProductes(String[] proveidor, int []quantitat){
+        
+        double mitja = 0;
+        double total = 0;
+        for (int i=0;i<contProveidor;i++){
+            total += arrQuantitat[i];
+        }
+        mitja = total/contProveidor;
+        System.out.println("La mitjana de productes per comanda es: " + String.format("%.2f",mitja));
+    }
     
 }//end class

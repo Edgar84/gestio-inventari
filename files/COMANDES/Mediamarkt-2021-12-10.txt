@@ -11,7 +11,7 @@ Mediamarkt
 Pol. ind. Segre 25
 965896542
 
-COMANDA - 2021-12-08
+COMANDA - 2021-12-10
 
 ------------------------------
  + Article:       Salvar al soldado Ryan
@@ -21,6 +21,10 @@ COMANDA - 2021-12-08
  + Article:       Gorilas en la niebla
  + Tipus:         Caixa slim
  + Quantitat:  147
+------------------------------
+ + Article:       Titanes, hicieron historia
+ + Tipus:         DVD Amb llibret
+ + Quantitat:  139
 ------------------------------
  + Article:       Cocktail
  + Tipus:         DVD Amb llibret
