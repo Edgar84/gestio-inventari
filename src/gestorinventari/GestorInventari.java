@@ -340,7 +340,6 @@ public class GestorInventari {
             System.out.print("Nom: " + nom + " | ");
             System.out.print("Any: " + any + " | ");
             System.out.print("Tipus: " + tipus + " | ");
-            System.out.print("Categoria: " + categoria + " | ");
             System.out.print("Preu: " + preu + " | ");
             System.out.println("Stock: " + stock + " | ");
             System.out.println("Descripció: " + descripcio);
@@ -364,7 +363,6 @@ public class GestorInventari {
         
         String consulta = "";
         PreparedStatement ps = null;
-        ResultSet  rs = null;
         
         try {
             //Empleno la taula Pertany
@@ -375,6 +373,11 @@ public class GestorInventari {
             
         }catch(SQLException sqle){
             sqle.printStackTrace();
+        }
+        if (ps.executeUpdate() != 0){
+            
+        }else {
+            System.out.println("Error");
         }
     }
     
